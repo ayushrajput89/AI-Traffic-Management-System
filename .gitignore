@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+yolov8s.pt
+data/raw/traffic_videos/*.mp4
+data/raw/traffic_videos/*.mov
+outputs/*.mp4
+video_previews/
+video_previews_batch2/
+.tempmediaStorage/
+.DS_Store
