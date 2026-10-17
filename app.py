@@ -20,14 +20,21 @@ st.sidebar.header("⚙️ Configuration Panel")
 st.sidebar.subheader("1. Video Source")
 video_source_type = st.sidebar.radio("Select Input Method:", ["Pre-loaded Dataset", "Upload Custom Video"])
 
-video_dir = r"D:\AI-Traffic-Management-System\data\raw\traffic_videos"
+video_dir = os.path.join(os.path.dirname(__file__), "data", "raw", "traffic_videos")
+sample_dir = os.path.join(os.path.dirname(__file__), "sample_data")
 video_path = None
 
 if video_source_type == "Pre-loaded Dataset":
-    if os.path.exists(video_dir):
-        available_videos = [f for f in os.listdir(video_dir) if f.endswith(('.mp4', '.mov'))]
-        selected_video = st.sidebar.selectbox("Choose a video:", available_videos)
-        video_path = os.path.join(video_dir, selected_video)
+    # Check primary dataset folder or fallback to sample_data folder
+    active_dir = video_dir if (os.path.exists(video_dir) and len([f for f in os.listdir(video_dir) if f.endswith(('.mp4', '.mov'))]) > 0) else sample_dir
+    
+    if os.path.exists(active_dir):
+        available_videos = [f for f in os.listdir(active_dir) if f.endswith(('.mp4', '.mov'))]
+        if available_videos:
+            selected_video = st.sidebar.selectbox("Choose a video:", available_videos)
+            video_path = os.path.join(active_dir, selected_video)
+        else:
+            st.sidebar.error("No pre-loaded videos found!")
     else:
         st.sidebar.error("Dataset folder not found!")
 else:
@@ -50,9 +57,15 @@ max_capacity = st.sidebar.slider("Road Capacity (Max Vehicles)", min_value=5, ma
 # --- MAIN DASHBOARD LAYOUT ---
 tab1, tab2, tab3 = st.tabs(["📺 Live Feed", "📈 Traffic Analytics", "🧪 Model Evaluation"])
 
-start_processing = st.sidebar.button("▶️ Start Processing", use_container_width=True)
+if "is_processing" not in st.session_state:
+    st.session_state.is_processing = False
 
-if start_processing and video_path:
+# Toggle button
+button_label = "⏹️ Stop Processing" if st.session_state.is_processing else "▶️ Start Processing"
+if st.sidebar.button(button_label, use_container_width=True):
+    st.session_state.is_processing = not st.session_state.is_processing
+
+if st.session_state.is_processing and video_path:
     tracker = VehicleTracker('yolov8s.pt')
     
     cap = cv2.VideoCapture(video_path)
@@ -135,6 +148,11 @@ if start_processing and video_path:
         if frame_count % frame_skip != 0:
             continue
             
+        # Check if user clicked stop
+        if not st.session_state.is_processing:
+            st.warning("Processing stopped by user.")
+            break
+            
         result = tracker.process_frame(frame, conf=conf_threshold)
         annotated_frame = result.plot()
         
@@ -176,5 +194,6 @@ if start_processing and video_path:
             chart_classes.bar_chart(class_df.set_index("Vehicle"))
         
     cap.release()
-elif start_processing and not video_path:
+elif st.session_state.is_processing and not video_path:
     st.error("Please select or upload a valid video.")
+    st.session_state.is_processing = False
