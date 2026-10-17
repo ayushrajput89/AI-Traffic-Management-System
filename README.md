@@ -1,5 +1,9 @@
 # AI Traffic Management System
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ai-traffic-management-system.streamlit.app/)
+
+> 🚀 **Live Demo:** [ai-traffic-management-system.streamlit.app](https://ai-traffic-management-system.streamlit.app/)
+
 A real-time traffic management project built using Computer Vision to dynamically adjust traffic signals based on live vehicle density. Instead of relying on static timers, this system calculates active road congestion and allocates green light duration accordingly.
 
 ## Features
